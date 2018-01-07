@@ -2085,7 +2085,7 @@ convert_error_code_to_mysql(
 
 	case DB_TOO_BIG_INDEX_COL:
 		my_error(ER_INDEX_COLUMN_TOO_LONG, MYF(0),
-			 DICT_MAX_FIELD_LEN_BY_FORMAT_FLAG(flags));
+			 (ulong) DICT_MAX_FIELD_LEN_BY_FORMAT_FLAG(flags));
 		return(HA_ERR_INDEX_COL_TOO_LONG);
 
 	case DB_NO_SAVEPOINT:
@@ -5105,7 +5105,6 @@ innobase_close_connection(
 				"MariaDB is closing a connection that has an active "
 				"InnoDB transaction.  " TRX_ID_FMT " row modifications "
 				"will roll back.",
-					" row modifications will roll back.",
 					trx->undo_no);
 				ut_d(ib::warn()
 				     << "trx: " << trx << " started on: "
@@ -6038,7 +6037,7 @@ innobase_build_index_translation(
 		if (index_mapping[count] == 0) {
 			sql_print_error("Cannot find index %s in InnoDB"
 					" index dictionary.",
-					table->key_info[count].name);
+					table->key_info[count].name.str);
 			ret = false;
 			goto func_exit;
 		}
@@ -6049,7 +6048,7 @@ innobase_build_index_translation(
 					          index_mapping[count])) {
 			sql_print_error("Found index %s whose column info"
 					" does not match that of MariaDB.",
-					table->key_info[count].name);
+					table->key_info[count].name.str);
 			ret = false;
 			goto func_exit;
 		}
@@ -11972,7 +11971,7 @@ create_table_info_t::create_options_are_invalid()
 				ER_ILLEGAL_HA_CREATE_OPTION,
 				"InnoDB: invalid KEY_BLOCK_SIZE = %u."
 				" Valid values are [1, 2, 4, 8, 16]",
-				m_create_info->key_block_size);
+				(uint) m_create_info->key_block_size);
 			ret = "KEY_BLOCK_SIZE";
 			break;
 		}
@@ -12421,7 +12420,7 @@ index_bad:
 				m_thd, Sql_condition::WARN_LEVEL_WARN,
 				ER_ILLEGAL_HA_CREATE_OPTION,
 				"InnoDB: ignoring KEY_BLOCK_SIZE=%u.",
-				m_create_info->key_block_size);
+				(uint) m_create_info->key_block_size);
 		}
 	}
 
@@ -12444,7 +12443,7 @@ index_bad:
 				ER_ILLEGAL_HA_CREATE_OPTION,
 				"InnoDB: ignoring KEY_BLOCK_SIZE=%u"
 				" unless ROW_FORMAT=COMPRESSED.",
-				m_create_info->key_block_size);
+				(uint) m_create_info->key_block_size);
 			zip_allowed = false;
 		}
 	} else {
@@ -13984,7 +13983,8 @@ ha_innobase::records_in_range(
 		push_warning_printf(
 			ha_thd(), Sql_condition::WARN_LEVEL_WARN,
 			ER_NO_DEFAULT,
-			"btr_estimate_n_rows_in_range(): %f", n_rows);
+			"btr_estimate_n_rows_in_range(): %lld",
+                        (longlong) n_rows);
 	);
 
 func_exit:
@@ -22364,7 +22364,7 @@ ib_push_frm_error(
 			"installations? See "
 			REFMAN
 			"innodb-troubleshooting.html\n",
-			ib_table->name);
+			ib_table->name.m_name);
 
 		if (push_warning) {
 			push_warning_printf(thd, Sql_condition::WARN_LEVEL_WARN,
@@ -22408,7 +22408,7 @@ ib_push_frm_error(
 			"installations? See "
 			REFMAN
 			"innodb-troubleshooting.html\n",
-			ib_table->name, n_keys,
+			ib_table->name.m_name, n_keys,
 			table->s->keys);
 
 		if (push_warning) {
